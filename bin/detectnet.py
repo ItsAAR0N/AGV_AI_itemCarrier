@@ -91,10 +91,10 @@ while True:
 	print("detected {:d} objects in image".format(len(detections)))
 
 	for detection in detections:
-		print(detection)
+	print(detection)
 	
-	# Testing
-	arduino.write((detections).encode())
+	if len(detections) > 0:
+		arduino.write(b"Detected\n")
 
 	data = arduino.readline().decode().strip()
 	if data:
