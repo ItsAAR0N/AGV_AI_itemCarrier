@@ -52,6 +52,13 @@ long durationR; long durationL;
 int distanceR; int distanceL; 
 const int num_readings = 1; // Number of readings to average
 
+int ultraDistance_L, ultraDistance_F, ultraDistance_R; 
+int PresetDistance = 15;
+
+// IR sensor declaration
+#define L_S A0 // Ir sensor Left
+#define R_S A1 // Ir sensor Right
+
 //FaBoPWM faboPWM;
 int pos = 0;
 int MAX_VALUE = 2000;
@@ -105,7 +112,7 @@ int MIN_VALUE = 300;
 uint8_t Motor_PWM = 300;  // Slow
 
 //    CAR MOVEMENTS
-//    FORWARD
+//    FORWARD  (BACK)
 //    ↑A-----B↑
 //     |  ↑  |
 //     |  |  |
@@ -125,7 +132,7 @@ void BACK()
   MOTORC_BACKOFF(Motor_PWM); 
   MOTORD_FORWARD(Motor_PWM);
 }
-//    BACK
+//    BACK (ADVANCE)
 //    ↓A-----B↓
 //     |  |  |
 //     |  ↓  |
@@ -360,8 +367,8 @@ void interface_control() { // Manual Serial interface
   }
 }
 
-// Read HC-SR04 sensor (Ultrasonic Reading)
-void ultrasonic_reading() {
+// Read HC-SR04 sensor (Ultrasonic Reading) for forward reading
+void ultrasonic_reading_forward() {
   // Arrays to store readings for each sensor
   long durationsR[num_readings]; long durationsL[num_readings];
   // Sensoring (RIGHT)
@@ -415,10 +422,19 @@ void ultrasonic_reading() {
   displayText(messageleft, messageright, 0, 0, 0, 10); 
 }
 
+long ultrasonic_obstacle_sensing() {
+  digitalWrite(TRIGPINA, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGPINA, HIGH);
+  delayMicroseconds(10);
+  long duration = pulseIn(ECHOPINA, HIGH);
+  return distance = duration * 0.034 / 2;
+}
+
 // Advance to wall until specified distance using Ultrasonic sensors
 void advance_until_distance(int dis) {
   int target_distance;
-  ultrasonic_reading();
+  ultrasonic_reading_forward();
   if (dis == 5) {
     target_distance = dis + 4; // 2.5 = basic error
   } else {
@@ -427,7 +443,7 @@ void advance_until_distance(int dis) {
 
   // Advance until the target distance is reached
   while (true) {
-    ultrasonic_reading(); // Update ultrasonic readings
+    ultrasonic_reading_forward(); // Update ultrasonic readings
     BACK();
     if (dis == 5){
       STOP();
@@ -445,6 +461,90 @@ void advance_until_distance(int dis) {
   String messageleft = "LEFT (U): " + String(distanceL);
   String messageright = "RIGHT (U): " + String(distanceR);
   displayText(messageleft, messageright, 0, 0, 0, 10); 
+}
+
+// Generate PWM signal to control servo
+void servo_pulse(int servoPin, int angle) {
+  int PWM = (angle * 11) + 500; // Convert angle to ms
+  digitalWrite(servoPin, HIGH);
+  delayMicroseconds(PWM);
+  digitalWrite(servoPin, LOW);
+  delay(50);
+}
+
+void distanceComparison_obstacle() {
+  if (ultraDistance_L > ultraDistance_R) {
+    LEFT_1();
+    delay(500);
+    BACK(); // Back is actually forwards in our case
+    delay(500);
+    RIGHT_1();
+    delay(500);
+    BACK();
+    delay(500);
+    RIGHT_1();
+    delay(500);
+  } else {
+    RIGHT_1();
+    delay(500);
+    BACK();
+    delay(500);
+    LEFT_1();
+    delay(500);
+    BACK();
+    delay(500);
+    LEFT_1();
+    delay(500);
+  }
+}
+
+void CheckSides() {
+  STOP(); 
+  delay(100);
+  for (int angle = 70; angle <= 140; angle += 5) { // Rotate right
+    servo_pulse(servoPin, angle); // Check right obstacles
+  }
+  delay(300);
+
+  ultraDistance_R = ultrasonic_obstacle_sensing(); 
+  displayText("Right Distance =", String(ultraDistance_R), 0, 0, 0, 10); // Display info on LCD
+  delay(100)
+
+  for (int angle = 140; angle >= 0; angle -= 5) { // Rotate left
+    servo_pulse(servoPin, angle); // Check left obstacles
+  }
+  delay(500);
+
+  ultraDistance_L = ultrasonic_obstacle_sensing();
+  displayText("Left Distance =", String(ultraDistance_L), 0, 0, 0, 10);
+  delay(100);
+
+  for (int angle = 0; angle <= 70; angle += 5) { // Rotate back to forward pos
+    servo_pulse(servoPin, angle);
+    delay(300);
+    distanceComparison_obstacle();
+  }
+
+}
+
+void lineFollower_obstacle_avoidance() {
+  ultraDistance_F = ultrasonic_obstacle_sensing();
+  
+  displayText("Forward Distance =", String(ultraDistance_F), 0, 0, 0, 10); // Display info on LCD
+  // If Right Sensor and Left Sensor are at White color then it will call forward function
+  if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 0 )) {
+    if (ultraDistance_F > PresetDistance) {
+      BACK(); // Advance
+    } else {
+      CheckSides(); // Obstcale detected, finding alternative path
+    }
+  } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
+    RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
+  } else if ((digitalRead(R_S) == 0) && (digitalRead(LS) == 1)) {
+    LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function
+  }
+
+  delay(10);
 }
 
 void setup() {
