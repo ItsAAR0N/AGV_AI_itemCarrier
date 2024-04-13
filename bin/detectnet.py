@@ -23,13 +23,26 @@
 
 import serial 
 import time
+import threading
 
 import jetson.inference
 import jetson.utils
 
 import argparse
 import sys
+
 time.sleep(5)
+
+# Function to handle communication with Arduino
+def arduino_communication(arduino):
+	while True:
+		if len(detections) > 0:
+			arduino.write(b"Detected\n")
+
+			data = arduino.readline().decode().strip()
+			if data:
+				print("Arduino Response", data)
+
 try:
     arduino = serial.Serial(
         port='/dev/ttyUSB0',
@@ -78,6 +91,13 @@ net = jetson.inference.detectNet(opt.network, sys.argv, opt.threshold)
 # create video sources
 input = jetson.utils.videoSource(opt.input_URI, argv=sys.argv)
 
+# Initialize detections variable
+detections = []
+
+# Create thread for Arduino communication
+# arduino_thread = threading.Thread(target=arduino_communication, args=(arduino,))
+# arduino_thread.daemon = True
+# arduino_thread.start()
 
 # process frames until the user exits
 while True:
@@ -91,14 +111,19 @@ while True:
 	print("detected {:d} objects in image".format(len(detections)))
 
 	for detection in detections:
-	print(detection)
+		print(detection)
 	
-	if len(detections) > 0:
-		arduino.write(b"Detected\n")
+	# Create thread for Arduino communication
+	arduino_thread = threading.Thread(target=arduino_communication, args=(arduino,))
+	arduino_thread.daemon = True
+	arduino_thread.start()
 
-	data = arduino.readline().decode().strip()
-	if data:
-		print("Arduino response:", data)
+	# if len(detections) > 0:
+	# 	arduino.write(b"Detected\n")
+
+	# data = arduino.readline().decode().strip()
+	# if data:
+	# 	print("Arduino response:", data)
 
 	# render the image
 	output.Render(img)
