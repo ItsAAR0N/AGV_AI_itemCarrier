@@ -1,7 +1,7 @@
 /* =================================================
 Author(s): Aaron Shek, Li Ming Ip, ...
 University of Hong Kong
-Date of last edit: 13/04/24
+Date of last edit: 15/04/24
 AGV + Item/Message Carrier System (MAIN)
    =================================================
 */
@@ -45,15 +45,19 @@ char incomingInstr;
 #define PANPIN 48 // PL1
 #define TILTPIN 47// PL2
 
-// Obstacle Avoidanec Servo declaration
+// Obstacle Avoidance Servo declaration
 int servoPin = 40; // PG0
 
 // HC-SR04 Ultrasonic sensor declaration
 #define ECHOPINA 25 // PA3 (pin 25)
 #define TRIGPINA 28 // PA6 (pin 28)
 
-#define TRIGPINB 33 // PA4 (pin 33)
-#define ECHOPINB 32 // PA5 (pin 32)
+#define TRIGPINB 33 // PC4 (pin 33)
+#define ECHOPINB 32 // PC5 (pin 32)
+
+// Ultrasonic sensor (obstacle avoidance) declaration
+#define TRIGPINC 22 // PA0 (pin 22)
+#define ECHOPINC 24 // PA2 (pin 24)
 
 long durationR; long durationL; 
 int distanceR; int distanceL; 
@@ -337,7 +341,7 @@ void sendVolt(){
   if(newV!=oldV) {
     if (!Serial3.available()) {
       Serial3.println(newV);
-      Serial.println(newV);
+      // Serial.println(newV);
     }
   }
   oldV=newV;
@@ -350,8 +354,8 @@ void interface_control() { // Manual Serial interface
     // Read incoming data
     incomingInstr = Serial.read();
     incomingInstr = toupper(incomingInstr);
-    Serial.print("Received: ");
-    Serial.println(incomingInstr);
+    // Serial.print("Received: ");
+    // Serial.println(incomingInstr);
     delay(10); // Add a small delay after reading serial data
   }
 
@@ -416,12 +420,12 @@ void ultrasonic_reading_forward() {
   averageDurationL = averageDurationL/num_readings;
   distanceL = averageDurationL * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
   
-  Serial.print("Distance R (U): ");
-  Serial.print(distanceR);
-  Serial.println(" cm");
-  Serial.print("Distance L(U): ");
-  Serial.print(distanceL);
-  Serial.println(" cm");
+//  Serial.print("Distance R (U): ");
+//  Serial.print(distanceR);
+//  Serial.println(" cm");
+//  Serial.print("Distance L(U): ");
+//  Serial.print(distanceL);
+//  Serial.println(" cm");
   String messageleft = "LEFT (U): ";
   messageleft += distanceL;
   String messageright = "RIGHT (U): ";
@@ -570,7 +574,7 @@ void JetsonCommunication() {
 void setup() {
   // Setup Serial interface
   SERIAL.begin(115200); // USB Serial setup
-  SERIAL.println("ROBOT START");
+  // SERIAL.println("ROBOT START");
   STOP(); // Stop the robot
   Serial3.begin(9600); // BT serial setup
 
@@ -581,7 +585,7 @@ void setup() {
 
   // OLED Setup
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
-    Serial.println(F("SSD1306 allocation failed"));
+    // Serial.println(F("SSD1306 allocation failed"));
   }
   display.clearDisplay();
   display.setTextSize(1);      // Normal 1:1 pixel scale
@@ -606,8 +610,8 @@ void loop() {
     voltCount++; // Voltage reading
     time = millis();
 
-    UART_Control(); //get USB and BT serial data -- For servo camera control
-    interface_control(); // Manual control 
+    // UART_Control(); //get USB and BT serial data -- For servo camera control
+    // interface_control(); // Manual control 
 
     JetsonCommunication();
     
@@ -622,7 +626,7 @@ void loop() {
     // Voltage Reading
     if (voltCount>=5){
       voltCount=0;
-      sendVolt();
+      // sendVolt();
     }
   }
 }
