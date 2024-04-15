@@ -103,10 +103,11 @@ while True:
 	detections = net.Detect(img, overlay=opt.overlay)
 
 	# print the detections
-	print("detected {:d} objects in image".format(len(detections)))
+	print("Detected {:d} objects in image".format(len(detections)))
 
 	for detection in detections:
-		print(detection)
+		print("{0} DETECTED".format(net.GetClassDesc(detection.ClassID)))
+		print(detection) 
 	
 	if len(detections) > 0:
 		arduino.write(b"D\n")
