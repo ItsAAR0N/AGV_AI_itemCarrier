@@ -59,6 +59,10 @@ int servoPin = 40; // PG0
 #define TRIGPINC 22 // PA0 (pin 22)
 #define ECHOPINC 24 // PA2 (pin 24)
 
+// IR sensor declaration
+#define L_S A0 // Left IR sensor
+#define R_S A1 // Right IR sensor
+
 long durationR; long durationL; 
 int distanceR; int distanceL; 
 const int num_readings = 1; // Number of readings to average
@@ -599,9 +603,32 @@ void setup() {
   pinMode(ECHOPINA, INPUT);
   pinMode(TRIGPINB, OUTPUT); 
   pinMode(ECHOPINB, INPUT);
+  pinMode(TRIGPINC, OUTPUT); 
+  pinMode(ECHOPINC, INPUT);
 
+  // Setup IR sensors
+  pinMode(L_S, INPUT);
+  pinMode(R_S, INPUT);
+
+  // Setup Servo 
+  pinMode(servoPin, OUTPUT);
+
+  // Re-align Servo
+  for (int angle = 70; angle <= 140; angle += 5) {
+    servo_pulse(servoPin, angle);
+  }
+  for (int angle = 140; angle >= 0; angle -= 5) {
+    servo_pulse(servoPin, angle);
+  }
+  for (int angle = 0; angle <= 70; angle += 5) {
+    servo_pulse(servoPin, angle);
+  }
+  ultraDistance_F = ultrasonic_obstacle_sensing();
+  
   // Setup Voltage detector
   pinMode(A0, INPUT);
+
+  delay(500);
 }
 
 void loop() {
