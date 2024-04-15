@@ -41,6 +41,13 @@ int servo_max = 160;
 unsigned long time;
 char incomingInstr;
 
+// Tilt and Pan Servo declaration
+#define PANPIN 48 // PL1
+#define TILTPIN 47// PL2
+
+// Obstacle Avoidanec Servo declaration
+int servoPin = 40; // PG0
+
 // HC-SR04 Ultrasonic sensor declaration
 #define ECHOPINA 25 // PA3 (pin 25)
 #define TRIGPINA 28 // PA6 (pin 28)
@@ -428,7 +435,7 @@ long ultrasonic_obstacle_sensing() {
   digitalWrite(TRIGPINA, HIGH);
   delayMicroseconds(10);
   long duration = pulseIn(ECHOPINA, HIGH);
-  return distance = duration * 0.034 / 2;
+  return duration * 0.034 / 2;
 }
 
 // Advance to wall until specified distance using Ultrasonic sensors
@@ -508,7 +515,7 @@ void CheckSides() {
 
   ultraDistance_R = ultrasonic_obstacle_sensing(); 
   displayText("Right Distance =", String(ultraDistance_R), 0, 0, 0, 10); // Display info on LCD
-  delay(100)
+  delay(100);
 
   for (int angle = 140; angle >= 0; angle -= 5) { // Rotate left
     servo_pulse(servoPin, angle); // Check left obstacles
@@ -540,11 +547,24 @@ void lineFollower_obstacle_avoidance() {
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
     RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
-  } else if ((digitalRead(R_S) == 0) && (digitalRead(LS) == 1)) {
+  } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
     LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function
   }
 
   delay(10);
+}
+
+void JetsonCommunication() {
+  if (SERIAL.available() > 0) {
+    // Read the incoming byte
+    char command = Serial.read();
+
+    // Check if the received command is "Detected"
+    if (command == 'D') {
+      // Serial.println("Object Detected!"); // Do something...
+      Serial.println("A"); // Handshake protocol
+    }
+  }
 }
 
 void setup() {
@@ -586,9 +606,11 @@ void loop() {
     voltCount++; // Voltage reading
     time = millis();
 
-    UART_Control(); //get USB and BT serial data
+    UART_Control(); //get USB and BT serial data -- For servo camera control
     interface_control(); // Manual control 
 
+    JetsonCommunication();
+    
     // Constrain the servo movement
     pan = constrain(pan, servo_min, servo_max);
     tilt = constrain(tilt, servo_min, servo_max);
