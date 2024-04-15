@@ -19,7 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-#
+
+# Last edited by Aaron Shek, University of Hong Kong 15/04/24
 
 import serial 
 import time
@@ -33,7 +34,6 @@ import sys
 
 time.sleep(5)
 
-# Function to handle communication with Arduino
 def arduino_communication(arduino):
 	while True:
 		if len(detections) > 0:
@@ -94,11 +94,6 @@ input = jetson.utils.videoSource(opt.input_URI, argv=sys.argv)
 # Initialize detections variable
 detections = []
 
-# Create thread for Arduino communication
-# arduino_thread = threading.Thread(target=arduino_communication, args=(arduino,))
-# arduino_thread.daemon = True
-# arduino_thread.start()
-
 # process frames until the user exits
 while True:
 	# capture the next image
@@ -113,17 +108,15 @@ while True:
 	for detection in detections:
 		print(detection)
 	
-	# Create thread for Arduino communication
-	arduino_thread = threading.Thread(target=arduino_communication, args=(arduino,))
-	arduino_thread.daemon = True
-	arduino_thread.start()
+	if len(detections) > 0:
+		arduino.write(b"D\n")
+		# Wait for acknowledgement from Arduino
+		data = arduino.readline().decode().strip()
 
-	# if len(detections) > 0:
-	# 	arduino.write(b"Detected\n")
-
-	# data = arduino.readline().decode().strip()
-	# if data:
-	# 	print("Arduino response:", data)
+		if data == "A":
+			print("COMMAND ACKNOWLEDGED FROM ARDUINO")
+		else: 
+			print("UNEXPECTED RESPONSE FROM ARDUINO: ", data)
 
 	# render the image
 	output.Render(img)
