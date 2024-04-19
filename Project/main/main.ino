@@ -557,9 +557,14 @@ void lineFollower_obstacle_avoidance() {
       CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
+    STOP(); // Slow testing
+    delay(100);
     RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
   } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
+    STOP();
+    delay(100);
     LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
+    // delay(100);
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
     delay(10000);
@@ -660,7 +665,9 @@ void loop() {
     //IRTest();
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
-    lineFollower_obstacle_avoidance();
+    while (true) { // Run algorith continuously for testing 
+      lineFollower_obstacle_avoidance();
+    }
     // JetsonCommunication();
     
     // Constrain the servo movement
