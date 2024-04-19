@@ -61,7 +61,7 @@ int servoPin = 40; // PG0
 
 // IR sensor declaration
 #define L_S A0 // Left IR sensor
-#define R_S A1 // Right IR sensor
+#define R_S A2 // Right IR sensor
 
 long durationR; long durationL; 
 int distanceR; int distanceL; 
@@ -334,7 +334,7 @@ void displayText(String text1, String text2, String text3 , int cursorL1, int cu
   display.println(text1);
   display.setCursor(cursorL3, cursorL4);     // Start at top-left corner
   display.println(text2);
-  display.setCursor(cursorL4, cursorL5);     // Start at top-left corner
+  display.setCursor(cursorL5, cursorL6);     // Start at top-left corner
   display.println(text3);
   display.display();
 }
@@ -544,7 +544,13 @@ void CheckSides() {
 void lineFollower_obstacle_avoidance() {
   ultraDistance_F = ultrasonic_obstacle_sensing();
   
-  displayText("Forward Distance =", String(ultraDistance_F), 0, 0, 0, 10); // Display info on LCD
+  // Display to OLED
+  String messageTop = "Forward D: " + String(ultraDistance_F);
+  String messageMiddle = "Left: " + String((digitalRead(L_S) == 1 ? "Black" : "White"));
+  String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? " Black" : "White"));
+  displayText(messageTop, messageMiddle, messageBottom, 0, 0, 0, 10, 0, 20);
+  // displayText("Forward Distance =", String(ultraDistance_F), 0, 0, 0, 10); // Display info on LCD
+  
   // If Right Sensor and Left Sensor are at White color then it will call forward function
   if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 0 )) {
     if (ultraDistance_F > PresetDistance) {
@@ -556,6 +562,9 @@ void lineFollower_obstacle_avoidance() {
     RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
   } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
     LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function
+  } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
+    STOP(); // Destination reached
+    delay(5000);
   }
 
   delay(10);
@@ -612,13 +621,16 @@ void setup() {
   // Setup Servo 
   pinMode(servoPin, OUTPUT);
 
+  servo_pulse(servoPin, 0); // Set to zero angle
   // Re-align Servo
   for (int angle = 70; angle <= 140; angle += 5) {
     servo_pulse(servoPin, angle);
   }
+  delay(1000);
   for (int angle = 140; angle >= 0; angle -= 5) {
     servo_pulse(servoPin, angle);
   }
+  delay(1000);
   for (int angle = 0; angle <= 70; angle += 5) {
     servo_pulse(servoPin, angle);
   }
@@ -627,6 +639,9 @@ void setup() {
   // Setup Voltage detector
   pinMode(A0, INPUT);
 
+  displayText("TESTING", "10 Seconds...", 0, 0, 0, 10);
+  delay(10000); // Delay 10 seconds
+  display.clearDisplay();
   delay(500);
 }
 

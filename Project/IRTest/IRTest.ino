@@ -1,7 +1,7 @@
 // Program to calibrate and test the IR sensors
 
-const int sensorPin_R = A2; // PA3 (pin 25)
-const int sensorPin_L = A0; // PA6 (pin 28)
+const int sensorPin_R = A2; // Analogue 2 pin
+const int sensorPin_L = A0; // Analogue 0 pin 
 
 int sensorValue_R = 0;
 int sensorValue_L = 0;
