@@ -56,8 +56,8 @@ int servoPin = 40; // PG0
 #define ECHOPINB 32 // PC5 (pin 32)
 
 // Ultrasonic sensor (obstacle avoidance) declaration
-#define TRIGPINC 22 // PA0 (pin 22)
-#define ECHOPINC 24 // PA2 (pin 24)
+#define TRIGPINC 24 // PA2 (pin 24)
+#define ECHOPINC 22 // PA0 (pin 22)
 
 // IR sensor declaration
 #define L_S A0 // Left IR sensor
@@ -438,11 +438,11 @@ void ultrasonic_reading_forward() {
 }
 
 long ultrasonic_obstacle_sensing() {
-  digitalWrite(TRIGPINA, LOW);
+  digitalWrite(TRIGPINC, LOW);
   delayMicroseconds(2);
-  digitalWrite(TRIGPINA, HIGH);
+  digitalWrite(TRIGPINC, HIGH);
   delayMicroseconds(10);
-  long duration = pulseIn(ECHOPINA, HIGH);
+  long duration = pulseIn(ECHOPINC, HIGH);
   return duration * 0.034 / 2;
 }
 
@@ -535,11 +535,10 @@ void CheckSides() {
   delay(100);
 
   for (int angle = 0; angle <= 70; angle += 5) { // Rotate back to forward pos
-    servo_pulse(servoPin, angle);
-    delay(300);
-    distanceComparison_obstacle();
+    servo_pulse(servoPin, angle);   
   }
-
+  delay(300);
+  distanceComparison_obstacle();
 }
 
 void lineFollower_obstacle_avoidance() {
@@ -589,7 +588,7 @@ void setup() {
 
   // OLED Setup
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
-    // Serial.println(F("SSD1306 allocation failed"));
+    Serial.println(F("SSD1306 allocation failed"));
   }
   display.clearDisplay();
   display.setTextSize(1);      // Normal 1:1 pixel scale
@@ -639,8 +638,8 @@ void loop() {
 
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
-
-    JetsonCommunication();
+    lineFollower_obstacle_avoidance();
+    // JetsonCommunication();
     
     // Constrain the servo movement
     pan = constrain(pan, servo_min, servo_max);
