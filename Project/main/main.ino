@@ -26,6 +26,7 @@ AGV + Item/Message Carrier System (MAIN)
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 #define OLED_RESET     28 //4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
 int oldV=1, newV=0;
 
 // Servo motor defintions
@@ -69,10 +70,6 @@ const int num_readings = 1; // Number of readings to average
 
 int ultraDistance_L, ultraDistance_F, ultraDistance_R; 
 int PresetDistance = 15;
-
-// IR sensor declaration
-#define L_S A0 // Ir sensor Left
-#define R_S A1 // Ir sensor Right
 
 //FaBoPWM faboPWM;
 int pos = 0;
@@ -159,7 +156,7 @@ void ADVANCE()
   MOTORC_FORWARD(Motor_PWM); 
   MOTORD_BACKOFF(Motor_PWM);
 }
-//    NW
+//    LEFT_1
 //    =A-----B↑
 //     |   ↖ |
 //     | ↖   |
@@ -547,7 +544,7 @@ void lineFollower_obstacle_avoidance() {
   // Display to OLED
   String messageTop = "Forward D: " + String(ultraDistance_F);
   String messageMiddle = "Left: " + String((digitalRead(L_S) == 1 ? "Black" : "White"));
-  String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? " Black" : "White"));
+  String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? "Black" : "White"));
   displayText(messageTop, messageMiddle, messageBottom, 0, 0, 0, 10, 0, 20);
   // displayText("Forward Distance =", String(ultraDistance_F), 0, 0, 0, 10); // Display info on LCD
   
@@ -555,16 +552,17 @@ void lineFollower_obstacle_avoidance() {
   if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 0 )) {
     if (ultraDistance_F > PresetDistance) {
       BACK(); // Advance
+      delay(100);
     } else {
       CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
     RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
   } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
-    LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function
+    LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
-    delay(5000);
+    delay(10000);
   }
 
   delay(10);
@@ -645,12 +643,21 @@ void setup() {
   delay(500);
 }
 
+void IRTest() {
+  // Display to OLED
+  String messageMiddle = "Left: " + String((digitalRead(L_S) == 1 ? "Black" : "White"));
+  String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? "Black" : "White"));
+  displayText("", messageMiddle, messageBottom, 0, 0, 0, 10, 0, 20);
+  
+  delay(100);
+}
+
 void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
     voltCount++; // Voltage reading
     time = millis();
-
+    //IRTest();
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
     lineFollower_obstacle_avoidance();
