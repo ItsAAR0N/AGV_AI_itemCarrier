@@ -69,7 +69,7 @@ int distanceR; int distanceL;
 const int num_readings = 1; // Number of readings to average
 
 int ultraDistance_L, ultraDistance_F, ultraDistance_R; 
-int PresetDistance = 15;
+int PresetDistance = 25;
 
 //FaBoPWM faboPWM;
 int pos = 0;
@@ -163,10 +163,10 @@ void ADVANCE()
 //    ↑C-----D=
 void LEFT_1()
 {
-  MOTORA_STOP(Motor_PWM); 
-  MOTORB_FORWARD(Motor_PWM);
-  MOTORC_BACKOFF(Motor_PWM); 
-  MOTORD_STOP(Motor_PWM);
+  MOTORA_STOP(Motor_PWM+15); 
+  MOTORB_FORWARD(Motor_PWM+15);
+  MOTORC_BACKOFF(Motor_PWM+15); 
+  MOTORD_STOP(Motor_PWM+15);
 }
 //    LEFT
 //    ↓A-----B↑
@@ -185,6 +185,69 @@ void RIGHT_2()
 //     | ↙   |
 //     |   ↙ |
 //    =C-----D↓
+
+// ########################################################################
+
+
+//    LEFT
+//    ↓A-----B↑
+//     |  ←  |
+//     |  ←  |
+//    ↑C-----D↓
+void RIGHT_TEST_2()
+{
+  MOTORA_FORWARD(Motor_PWM+17); 
+  MOTORB_FORWARD(Motor_PWM+16);
+  MOTORC_BACKOFF(Motor_PWM-4); 
+  MOTORD_BACKOFF(Motor_PWM);
+}
+
+//    RIGHT
+//    ↑A-----B↓
+//     |  →  |
+//     |  →  |
+//    ↓C-----D↑
+void LEFT_TEST_2()
+{
+  MOTORA_BACKOFF(Motor_PWM+11); 
+  MOTORB_BACKOFF(Motor_PWM+12);
+  MOTORC_FORWARD(Motor_PWM); 
+  MOTORD_FORWARD(Motor_PWM+2);
+}
+
+//void RIGHT_TESTING() {
+//  MOTORA_FORWARD(Motor_PWM); 
+//  MOTORB_STOP(Motor_PWM);
+//  MOTORC_FORWARD(Motor_PWM); 
+//  MOTORD_BACKOFF(Motor_PWM);
+//}
+
+
+//     HEEEEEEEEEEEEEEEEEEEEEEEERE XXXXXXXXXXX
+//    =B-----A↑
+//     |  →  |
+//     |  →  |
+//    ↑D-----C=
+void RIGHT_TESTING() {
+  MOTORA_FORWARD(Motor_PWM+11); //10*1.3=13
+  MOTORB_STOP(Motor_PWM);
+  MOTORC_STOP(Motor_PWM); 
+  MOTORD_FORWARD(Motor_PWM+17); //15*1.3=19.5
+}
+//    X
+//    ↑B-----A=
+//     |  →  |
+//     |  →  |
+//    =D-----C↑
+void LEFT_TESTING() {
+  MOTORA_STOP(Motor_PWM); 
+  MOTORB_FORWARD(Motor_PWM+11);
+  MOTORC_FORWARD(Motor_PWM+17); 
+  MOTORD_STOP(Motor_PWM);
+}
+
+// #########################################################################
+
 void LEFT_3()
 {
   MOTORA_FORWARD(Motor_PWM); 
@@ -199,10 +262,10 @@ void LEFT_3()
 //    =C-----D↑
 void RIGHT_1()
 {
-  MOTORA_BACKOFF(Motor_PWM); 
-  MOTORB_STOP(Motor_PWM);
-  MOTORC_STOP(Motor_PWM); 
-  MOTORD_FORWARD(Motor_PWM);
+  MOTORA_BACKOFF(Motor_PWM+15); 
+  MOTORB_STOP(Motor_PWM+15);
+  MOTORC_STOP(Motor_PWM+15); 
+  MOTORD_FORWARD(Motor_PWM+15);
 }
 //    RIGHT
 //    ↑A-----B↓
@@ -476,7 +539,7 @@ void advance_until_distance(int dis) {
 }
 
 // Generate PWM signal to control servo
-void servo_pulse(int servoPin, int angle) {
+void servo_pulse(int servoPin, int angle) { // DONE ✔
   int PWM = (angle * 11) + 500; // Convert angle to ms
   digitalWrite(servoPin, HIGH);
   delayMicroseconds(PWM);
@@ -484,33 +547,33 @@ void servo_pulse(int servoPin, int angle) {
   delay(50);
 }
 
-void distanceComparison_obstacle() {
+void distanceComparison_obstacle() { // NOT DONE ×
   if (ultraDistance_L > ultraDistance_R) {
-    LEFT_1();
-    delay(500);
+    RIGHT_TEST_2(); // Relative to car dir.
+    delay(600);
     BACK(); // Back is actually forwards in our case
-    delay(500);
-    RIGHT_1();
-    delay(500);
+    delay(2000);
+    LEFT_TEST_2();
+    delay(600);
     BACK();
-    delay(500);
-    RIGHT_1();
-    delay(500);
+    delay(1500);
+    //RIGHT_1();
+    //delay(500);
   } else {
-    RIGHT_1();
-    delay(500);
+    LEFT_TEST_2();
+    delay(600);
     BACK();
-    delay(500);
-    LEFT_1();
-    delay(500);
+    delay(2000);
+    RIGHT_TEST_2();
+    delay(6200);
     BACK();
-    delay(500);
-    LEFT_1();
-    delay(500);
+    delay(1500);
+    //LEFT_1();
+    //delay(500);
   }
 }
 
-void CheckSides() {
+void CheckSides() { // DONE ✔
   STOP(); 
   delay(100);
   for (int angle = 70; angle <= 140; angle += 5) { // Rotate right
@@ -538,7 +601,7 @@ void CheckSides() {
   distanceComparison_obstacle();
 }
 
-void lineFollower_obstacle_avoidance() {
+void lineFollower_obstacle_avoidance() { // DONE ✔
   ultraDistance_F = ultrasonic_obstacle_sensing();
   
   // Display to OLED
@@ -552,28 +615,39 @@ void lineFollower_obstacle_avoidance() {
   if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 0 )) {
     if (ultraDistance_F > PresetDistance) {
       BACK(); // Advance
-      delay(100);
-    } else {
-      CheckSides(); // Obstcale detected, finding alternative path
+      delay(200);
+      STOP();
+    }
+    //} else if (((digitalRead(R_S) == 0) && (ultraDistance_F < PresetDistance)) || ((digitalRead(L_S) == 0) && (ultraDistance_F < PresetDistance))) {
+    //  CheckSides();
+    //} 
+    else {
+      delay(1);// CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
-    STOP(); // Slow testing
+    // STOP(); // Slow testing
+    //delay(50);
+    // LEFT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
+    // AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII JORGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    LEFT_TESTING();
     delay(100);
-    RIGHT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
-  } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
     STOP();
+  } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
+    // STOP();
+    //delay(50);
+    // RIGHT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
+    RIGHT_TESTING();
     delay(100);
-    LEFT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
-    // delay(100);
+    STOP();
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
-    delay(10000);
+    delay(5000);
   }
 
   delay(10);
 }
 
-void JetsonCommunication() {
+void JetsonCommunication() { // DONE ✔
   if (SERIAL.available() > 0) {
     // Read the incoming byte
     char command = Serial.read();
@@ -585,6 +659,14 @@ void JetsonCommunication() {
     }
   }
 }
+
+void testCar() {
+  uint8_t Motor_PWM = 300;
+  RIGHT_TESTING();
+  // delay(3000);
+  // STOP();
+}
+
 
 void setup() {
   // Setup Serial interface
@@ -648,15 +730,6 @@ void setup() {
   delay(500);
 }
 
-void IRTest() {
-  // Display to OLED
-  String messageMiddle = "Left: " + String((digitalRead(L_S) == 1 ? "Black" : "White"));
-  String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? "Black" : "White"));
-  displayText("", messageMiddle, messageBottom, 0, 0, 0, 10, 0, 20);
-  
-  delay(100);
-}
-
 void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
@@ -665,6 +738,11 @@ void loop() {
     //IRTest();
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
+
+//    while(true) {
+//      testCar();
+//    }
+    
     while (true) { // Run algorith continuously for testing 
       lineFollower_obstacle_avoidance();
     }
