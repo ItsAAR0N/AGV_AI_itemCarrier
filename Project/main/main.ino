@@ -587,10 +587,6 @@ void distanceComparison_obstacle() { // NOT DONE ×
     }
     STOP();
     delay(1000);
-    // BACK();
-    //delay(1500);
-    //RIGHT_1();
-    //delay(500);
   } else {
     //LEFT_CUSTOMPWM_2();
     RIGHT_1_CUSTOM();
@@ -603,14 +599,10 @@ void distanceComparison_obstacle() { // NOT DONE ×
     }
     STOP();
     delay(1000);
-    // BACK();
-    // delay(1500);
-    //LEFT_1();
-    //delay(500);
   }
 }
 
-void CheckSides() { // DONE ✔
+void CheckSides() { 
   STOP(); 
   delay(100);
   for (int angle = 70; angle <= 140; angle += 5) { // Rotate right
@@ -638,7 +630,7 @@ void CheckSides() { // DONE ✔
   distanceComparison_obstacle();
 }
 
-void lineFollower_obstacle_avoidance() { // DONE ✔
+void lineFollower_obstacle_avoidance() { 
   ultraDistance_F = ultrasonic_obstacle_sensing();
   // Display to OLED
   String messageTop = "Forward D: " + String(ultraDistance_F);
@@ -653,11 +645,7 @@ void lineFollower_obstacle_avoidance() { // DONE ✔
       BACK(); // Advance
       delay(100);
       STOP();
-    }
-    //} else if (((digitalRead(R_S) == 0) && (ultraDistance_F < PresetDistance)) || ((digitalRead(L_S) == 0) && (ultraDistance_F < PresetDistance))) {
-    //  CheckSides();
-    //} 
-    else {
+    } else {
       CheckSides();// CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
@@ -680,35 +668,34 @@ void lineFollower_obstacle_avoidance() { // DONE ✔
   delay(10);
 }
 
-void JetsonCommunication() { // DONE ✔
-  if (SERIAL.available() > 0) {
-    // Read the incoming byte
-    char command = Serial.read();
+//void JetsonCommunication() { // DONE ✔
+//  if (SERIAL.available() > 0) {
+//    // Read the incoming byte
+//    char command = Serial.read();
+//
+//    // Check if the received command is "Detected"
+//    if (command) {
+//      // Serial.println("Object Detected!"); // Do something...
+//      Serial.println(command); // Handshake protocol
+//      displayText("OBJECT DECTECTED", String(command), 0, 0, 0, 10);
+//    }
+//  }
+//}
 
-    // Check if the received command is "Detected"
-    if (command == 'D') {
-      // Serial.println("Object Detected!"); // Do something...
-      Serial.println("A"); // Handshake protocol
+void JetsonCommunication() {
+  Serial.setTimeout(50);
+  if (Serial.available() > 0) {
+    // Read the incoming string until a newline is received
+    String command = Serial.readStringUntil('\n');
+    // Check if the received command is not empty
+    if (command.length() > 0) {
+      // Echo the received command back to the Jetson Nano
+      Serial.println(command);
+      // Display the command on the screen or perform other actions
+      displayText("OBJECT DETECTED:", command, 0, 0, 0, 10);
     }
   }
 }
-
-void testCar() {
-  uint8_t Motor_PWM = 300;
-//  LEFT_1_CUSTOM();
-//  delay(3000);
-//  STOP();
-//  delay(1000);
-//  RIGHT_1_CUSTOM();
-//  delay(3000);
-//  STOP();
-//  delay(1000);
-  BEAR_LEFT_CUSTOM();
-//  // delay(3000);
-//  // STOP();
-  //LEFT_1_CUSTOM();
-}
-
 
 void setup() {
   // Setup Serial interface
@@ -776,22 +763,15 @@ void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
     voltCount++; // Voltage r    while(true) {
-//      testCar();
-//    }eading
     time = millis();
     //IRTest();
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
-//
-//    while(true) {
-//      testCar();
-//    }
-    
+
     while (true) { // Run algorith continuously for testing
       JetsonCommunication(); 
-      lineFollower_obstacle_avoidance();
+      // lineFollower_obstacle_avoidance();
     }
-    
     
     // Constrain the servo movement
     pan = constrain(pan, servo_min, servo_max);
