@@ -69,7 +69,7 @@ int distanceR; int distanceL;
 const int num_readings = 1; // Number of readings to average
 
 int ultraDistance_L, ultraDistance_F, ultraDistance_R; 
-int PresetDistance = 25;
+int PresetDistance = 30;
 
 //FaBoPWM faboPWM;
 int pos = 0;
@@ -156,6 +156,7 @@ void ADVANCE()
   MOTORC_FORWARD(Motor_PWM); 
   MOTORD_BACKOFF(Motor_PWM);
 }
+
 //    LEFT_1
 //    =A-----B↑
 //     |   ↖ |
@@ -165,10 +166,11 @@ void LEFT_1()
 {
   MOTORA_STOP(Motor_PWM+15); 
   MOTORB_FORWARD(Motor_PWM+15);
-  MOTORC_BACKOFF(Motor_PWM+15); 
+  MOTORC_BACKOFF(Motor_PWM+ 15); 
   MOTORD_STOP(Motor_PWM+15);
 }
-//    LEFT
+
+//    RIGHT
 //    ↓A-----B↑
 //     |  ←  |
 //     |  ←  |
@@ -197,28 +199,82 @@ void LEFT_3()
 // ######################
 
 //
-//    =B-----A↑
-//     |  →  |
-//     |  →  |
+//    ↑B-----A↑
+//     |  ↗  |
+//     | ↗   |
 //    ↑D-----C=
-void RIGHT_TESTING() {
-  MOTORA_FORWARD(Motor_PWM+11); //10*1.3=13
-  MOTORB_STOP(Motor_PWM);
-  MOTORC_STOP(Motor_PWM); 
-  MOTORD_FORWARD(Motor_PWM+17); //15*1.3=19.5
+void BEAR_RIGHT_CUSTOM() {
+  MOTORA_STOP(Motor_PWM); //10*1.3=13
+  MOTORB_FORWARD(Motor_PWM+16);
+  MOTORC_FORWARD(Motor_PWM+23); 
+  MOTORD_STOP(Motor_PWM); //15*1.3=19.5
 }
 
 //    
 //    ↑B-----A=
-//     |  →  |
-//     |  →  |
+//     | ↙   |
+//     |  ↙  |
 //    =D-----C↑
-void LEFT_TESTING() {
+void BEAR_LEFT_CUSTOM() {
   MOTORA_STOP(Motor_PWM); 
-  MOTORB_FORWARD(Motor_PWM+11);
-  MOTORC_FORWARD(Motor_PWM+17); 
+  MOTORB_BACKOFF(Motor_PWM+16);
+  MOTORC_BACKOFF(Motor_PWM+23); 
   MOTORD_STOP(Motor_PWM);
 }
+
+//    RIGHT
+//    ↓B-----A↑
+//     |  ←  |
+//     |  ←  |
+//    ↑D-----C↓
+void RIGHT_CUSTOMPWM_2()
+{
+  MOTORA_FORWARD(1900); // 17
+  MOTORB_FORWARD(1900); // 16
+  MOTORC_BACKOFF(1900); // -4
+  MOTORD_BACKOFF(1900);
+}
+
+//    LEFT
+//    ↑B-----A↓
+//     |  →  |
+//     |  →  |
+//    ↓D-----C↑
+void LEFT_CUSTOMPWM_2()
+{
+  MOTORA_BACKOFF(1900); // 11
+  MOTORB_BACKOFF(1900); // 12
+  MOTORC_FORWARD(1900); 
+  MOTORD_FORWARD(1900); // 2
+}
+
+//    LEFT_1
+//    =A-----B↑
+//     |   ↖ |
+//     | ↖   |
+//    ↑C-----D=
+void LEFT_1_CUSTOM()
+{
+  MOTORA_STOP(Motor_PWM+16); 
+  MOTORB_FORWARD(Motor_PWM+16);
+  MOTORC_BACKOFF(Motor_PWM+16); 
+  MOTORD_STOP(Motor_PWM+16);
+}
+
+//    RIGHT_1
+//    ↑A-----B=
+//     | ↗   |
+//     |   ↗ |
+//    =C-----D↑
+void RIGHT_1_CUSTOM()
+{
+  MOTORA_BACKOFF(Motor_PWM+18); // Wheel installation is back to front (hence "backoff")
+  MOTORB_STOP(Motor_PWM+18);
+  MOTORC_STOP(Motor_PWM+18); 
+  MOTORD_FORWARD(Motor_PWM+18);
+}
+
+// ######################
 
 //    NE
 //    ↑A-----B=
@@ -233,13 +289,14 @@ void RIGHT_1()
   MOTORD_FORWARD(Motor_PWM+15);
 }
 
-//    RIGHT
+//    left
 //    ↑A-----B↓
 //     |  →  |
 //     |  →  |
 //    ↓C-----D↑
 void LEFT_2()
-{
+{ 
+  Motor_PWM = 1900;
   MOTORA_BACKOFF(Motor_PWM); 
   MOTORB_BACKOFF(Motor_PWM);
   MOTORC_FORWARD(Motor_PWM); 
@@ -518,25 +575,36 @@ void servo_pulse(int servoPin, int angle) { // DONE ✔
 
 void distanceComparison_obstacle() { // NOT DONE ×
   if (ultraDistance_L > ultraDistance_R) {
-    RIGHT_TEST_2(); // Relative to car dir.
-    delay(600);
-    BACK(); // Back is actually forwards in our case
+    // Go left
+    //RIGHT_CUSTOMPWM_2(); // Relative to car dir.
+    LEFT_1_CUSTOM();
     delay(2000);
-    LEFT_TEST_2();
-    delay(600);
-    BACK();
-    delay(1500);
+    BACK(); // Back is actually forwards in our case
+    delay(500);
+    while (digitalRead(R_S) == 0) {
+      RIGHT_1_CUSTOM();
+      delay(50);
+    }
+    STOP();
+    delay(1000);
+    // BACK();
+    //delay(1500);
     //RIGHT_1();
     //delay(500);
   } else {
-    LEFT_TEST_2();
-    delay(600);
-    BACK();
+    //LEFT_CUSTOMPWM_2();
+    RIGHT_1_CUSTOM();
     delay(2000);
-    RIGHT_TEST_2();
-    delay(6200);
     BACK();
-    delay(1500);
+    delay(500);
+    while (digitalRead(L_S) == 0) {
+      LEFT_1_CUSTOM();
+      delay(50);
+    }
+    STOP();
+    delay(1000);
+    // BACK();
+    // delay(1500);
     //LEFT_1();
     //delay(500);
   }
@@ -572,38 +640,37 @@ void CheckSides() { // DONE ✔
 
 void lineFollower_obstacle_avoidance() { // DONE ✔
   ultraDistance_F = ultrasonic_obstacle_sensing();
-  
   // Display to OLED
   String messageTop = "Forward D: " + String(ultraDistance_F);
   String messageMiddle = "Left: " + String((digitalRead(L_S) == 1 ? "Black" : "White"));
   String messageBottom = "Right: " + String((digitalRead(R_S) == 1 ? "Black" : "White"));
   displayText(messageTop, messageMiddle, messageBottom, 0, 0, 0, 10, 0, 20);
   // displayText("Forward Distance =", String(ultraDistance_F), 0, 0, 0, 10); // Display info on LCD
-  
+
   // If Right Sensor and Left Sensor are at White color then it will call forward function
   if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 0 )) {
     if (ultraDistance_F > PresetDistance) {
       BACK(); // Advance
-      delay(200);
+      delay(100);
       STOP();
     }
     //} else if (((digitalRead(R_S) == 0) && (ultraDistance_F < PresetDistance)) || ((digitalRead(L_S) == 0) && (ultraDistance_F < PresetDistance))) {
     //  CheckSides();
     //} 
     else {
-      delay(1);// CheckSides(); // Obstcale detected, finding alternative path
+      CheckSides();// CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
     // If Right Sensor is Black and Left Sensor is White then it will call Right function
-    LEFT_TESTING();
-    delay(100);
+    BEAR_RIGHT_CUSTOM();
+    delay(150);
     STOP();
   } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
     // STOP();
-    //delay(50);
+    // delay(50);
     // RIGHT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
-    RIGHT_TESTING();
-    delay(100);
+    BEAR_LEFT_CUSTOM();
+    delay(150);
     STOP();
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
@@ -628,9 +695,18 @@ void JetsonCommunication() { // DONE ✔
 
 void testCar() {
   uint8_t Motor_PWM = 300;
-  RIGHT_TESTING();
-  // delay(3000);
-  // STOP();
+//  LEFT_1_CUSTOM();
+//  delay(3000);
+//  STOP();
+//  delay(1000);
+//  RIGHT_1_CUSTOM();
+//  delay(3000);
+//  STOP();
+//  delay(1000);
+  BEAR_LEFT_CUSTOM();
+//  // delay(3000);
+//  // STOP();
+  //LEFT_1_CUSTOM();
 }
 
 
@@ -664,7 +740,7 @@ void setup() {
   pinMode(ECHOPINB, INPUT);
   pinMode(TRIGPINC, OUTPUT); 
   pinMode(ECHOPINC, INPUT);
-
+    
   // Setup IR sensors
   pinMode(L_S, INPUT);
   pinMode(R_S, INPUT);
@@ -699,20 +775,23 @@ void setup() {
 void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
-    voltCount++; // Voltage reading
+    voltCount++; // Voltage r    while(true) {
+//      testCar();
+//    }eading
     time = millis();
     //IRTest();
     // UART_Control(); //get USB and BT serial data -- For servo camera control
     // interface_control(); // Manual control 
-
+//
 //    while(true) {
 //      testCar();
 //    }
     
-    while (true) { // Run algorith continuously for testing 
+    while (true) { // Run algorith continuously for testing
+      JetsonCommunication(); 
       lineFollower_obstacle_avoidance();
     }
-    // JetsonCommunication();
+    
     
     // Constrain the servo movement
     pan = constrain(pan, servo_min, servo_max);
