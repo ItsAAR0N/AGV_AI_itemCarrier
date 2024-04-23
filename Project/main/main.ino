@@ -180,50 +180,23 @@ void RIGHT_2()
   MOTORC_BACKOFF(Motor_PWM); 
   MOTORD_BACKOFF(Motor_PWM);
 }
+
 //    SW
 //    ↓A-----B=
 //     | ↙   |
 //     |   ↙ |
 //    =C-----D↓
-
-// ########################################################################
-
-
-//    LEFT
-//    ↓A-----B↑
-//     |  ←  |
-//     |  ←  |
-//    ↑C-----D↓
-void RIGHT_TEST_2()
+void LEFT_3()
 {
-  MOTORA_FORWARD(Motor_PWM+17); 
-  MOTORB_FORWARD(Motor_PWM+16);
-  MOTORC_BACKOFF(Motor_PWM-4); 
+  MOTORA_FORWARD(Motor_PWM); 
+  MOTORB_STOP(Motor_PWM);
+  MOTORC_STOP(Motor_PWM); 
   MOTORD_BACKOFF(Motor_PWM);
 }
 
-//    RIGHT
-//    ↑A-----B↓
-//     |  →  |
-//     |  →  |
-//    ↓C-----D↑
-void LEFT_TEST_2()
-{
-  MOTORA_BACKOFF(Motor_PWM+11); 
-  MOTORB_BACKOFF(Motor_PWM+12);
-  MOTORC_FORWARD(Motor_PWM); 
-  MOTORD_FORWARD(Motor_PWM+2);
-}
+// ######################
 
-//void RIGHT_TESTING() {
-//  MOTORA_FORWARD(Motor_PWM); 
-//  MOTORB_STOP(Motor_PWM);
-//  MOTORC_FORWARD(Motor_PWM); 
-//  MOTORD_BACKOFF(Motor_PWM);
-//}
-
-
-//     HEEEEEEEEEEEEEEEEEEEEEEEERE XXXXXXXXXXX
+//
 //    =B-----A↑
 //     |  →  |
 //     |  →  |
@@ -234,7 +207,8 @@ void RIGHT_TESTING() {
   MOTORC_STOP(Motor_PWM); 
   MOTORD_FORWARD(Motor_PWM+17); //15*1.3=19.5
 }
-//    X
+
+//    
 //    ↑B-----A=
 //     |  →  |
 //     |  →  |
@@ -246,15 +220,6 @@ void LEFT_TESTING() {
   MOTORD_STOP(Motor_PWM);
 }
 
-// #########################################################################
-
-void LEFT_3()
-{
-  MOTORA_FORWARD(Motor_PWM); 
-  MOTORB_STOP(Motor_PWM);
-  MOTORC_STOP(Motor_PWM); 
-  MOTORD_BACKOFF(Motor_PWM);
-}
 //    NE
 //    ↑A-----B=
 //     | ↗   |
@@ -267,6 +232,7 @@ void RIGHT_1()
   MOTORC_STOP(Motor_PWM+15); 
   MOTORD_FORWARD(Motor_PWM+15);
 }
+
 //    RIGHT
 //    ↑A-----B↓
 //     |  →  |
@@ -291,6 +257,7 @@ void RIGHT_3()
   MOTORC_FORWARD(Motor_PWM); 
   MOTORD_STOP(Motor_PWM);
 }
+
 //    ROTATE CLOCKWISE
 //    ↑A-----B↓
 //     | ↗ ↘ |
@@ -303,6 +270,7 @@ void rotate_1()  //tate_1(uint8_t pwm_A,uint8_t pwm_B,uint8_t pwm_C,uint8_t pwm_
   MOTORC_BACKOFF(Motor_PWM); 
   MOTORD_BACKOFF(Motor_PWM);
 }
+
 //    ROTATE ANTI-CLOCKWISE
 //    ↓A-----B↑
 //     | ↙ ↖ |
@@ -315,6 +283,7 @@ void rotate_2()  // rotate_2(uint8_t pwm_A,uint8_t pwm_B,uint8_t pwm_C,uint8_t p
   MOTORC_FORWARD(Motor_PWM);
   MOTORD_FORWARD(Motor_PWM);
 }
+
 //    STOP
 //    =A-----B=
 //     |  =  |
@@ -625,10 +594,7 @@ void lineFollower_obstacle_avoidance() { // DONE ✔
       delay(1);// CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
-    // STOP(); // Slow testing
-    //delay(50);
-    // LEFT_1(); // If Right Sensor is Black and Left Sensor is White then it will call Right function
-    // AQUIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII JORGEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    // If Right Sensor is Black and Left Sensor is White then it will call Right function
     LEFT_TESTING();
     delay(100);
     STOP();
