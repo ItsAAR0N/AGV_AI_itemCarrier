@@ -110,12 +110,17 @@ while True:
 		print(detection) 
 	
 	if len(detections) > 0:
-		arduino.write(b"D\n")
+		# arduino.write(b"D\n")
+		command_string = "{0}".format(net.GetClassDesc(detection.ClassID))
+		command_bytes = command_string.encode('utf-8')
+		arduino.write(command_bytes)
+		
 		# Wait for acknowledgement from Arduino
 		data = arduino.readline().decode().strip()
 
-		if data == "A":
-			print("COMMAND ACKNOWLEDGED FROM ARDUINO")
+		if data: # == "A"
+			# print("ARDUINO RESPONSE: {0})
+			print(data)
 		else: 
 			print("UNEXPECTED RESPONSE FROM ARDUINO: ", data)
 
@@ -131,5 +136,3 @@ while True:
 	# exit on input/output EOS
 	if not input.IsStreaming() or not output.IsStreaming():
 		break
-
-
