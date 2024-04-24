@@ -205,8 +205,8 @@ void LEFT_3()
 //    ↑D-----C=
 void BEAR_RIGHT_CUSTOM() {
   MOTORA_STOP(Motor_PWM); //10*1.3=13
-  MOTORB_FORWARD(Motor_PWM+16);
-  MOTORC_FORWARD(Motor_PWM+23); 
+  MOTORB_FORWARD(Motor_PWM+27); // 20
+  MOTORC_FORWARD(Motor_PWM+33); // 27
   MOTORD_STOP(Motor_PWM); //15*1.3=19.5
 }
 
@@ -217,8 +217,8 @@ void BEAR_RIGHT_CUSTOM() {
 //    =D-----C↑
 void BEAR_LEFT_CUSTOM() {
   MOTORA_STOP(Motor_PWM); 
-  MOTORB_BACKOFF(Motor_PWM+16);
-  MOTORC_BACKOFF(Motor_PWM+23); 
+  MOTORB_BACKOFF(Motor_PWM+27); // 20
+  MOTORC_BACKOFF(Motor_PWM+33); // 27
   MOTORD_STOP(Motor_PWM);
 }
 
@@ -255,10 +255,10 @@ void LEFT_CUSTOMPWM_2()
 //    ↑C-----D=
 void LEFT_1_CUSTOM()
 {
-  MOTORA_STOP(Motor_PWM+16); 
-  MOTORB_FORWARD(Motor_PWM+16);
-  MOTORC_BACKOFF(Motor_PWM+16); 
-  MOTORD_STOP(Motor_PWM+16);
+  MOTORA_STOP(Motor_PWM); 
+  MOTORB_FORWARD(Motor_PWM+27); // 37
+  MOTORC_BACKOFF(Motor_PWM+24); // 22
+  MOTORD_STOP(Motor_PWM);
 }
 
 //    RIGHT_1
@@ -268,10 +268,10 @@ void LEFT_1_CUSTOM()
 //    =C-----D↑
 void RIGHT_1_CUSTOM()
 {
-  MOTORA_BACKOFF(Motor_PWM+18); // Wheel installation is back to front (hence "backoff")
-  MOTORB_STOP(Motor_PWM+18);
-  MOTORC_STOP(Motor_PWM+18); 
-  MOTORD_FORWARD(Motor_PWM+18);
+  MOTORA_BACKOFF(Motor_PWM+24); //  32 Wheel installation is back to front (hence "backoff")
+  MOTORB_STOP(Motor_PWM);
+  MOTORC_STOP(Motor_PWM); 
+  MOTORD_FORWARD(Motor_PWM+27); // 37
 }
 
 // ######################
@@ -573,30 +573,101 @@ void servo_pulse(int servoPin, int angle) { // DONE ✔
   delay(50);
 }
 
+void recenterBot() {
+  // Turn left until the right sensor detects black
+  while (digitalRead(L_S) != 1) {
+    LEFT_1_CUSTOM();
+    delay(50);
+    STOP();
+    delay(100);
+  }
+  STOP();
+  delay(2000);
+  BEAR_LEFT_CUSTOM();
+  delay(1000);
+//  if (digitalRead(R_S) == 1) {
+//    BEAR_LEFT_CUSTOM();
+//    delay(1500);
+//    BACK();
+//    delay(3000);
+//  }
+  
+  
+//  STOP(); // Stop as soon as black is detected
+//  delay(2000);
+//  // Short delay to stabilize before turning right
+//  while (digitalRead(R_S) == 0 && digitalRead(L_S) == 0) { // Detect Overshoot
+//    STOP(); // Stop as soon as black is detected
+//    delay(2000);
+//    displayText("OVERSHOOT DETECTED", "", 0, 0, 0, 10); 
+//    RIGHT_1_CUSTOM();
+//    delay(500);
+//  }
+//  // RIGHT_1_CUSTOM();
+//  delay(300);
+//  //if (digitalRead(R_S) == 1 && digitalRead(L_S) == 0) { // Turn right until both sensors detect white
+//    while (!(digitalRead(R_S) == 0 && digitalRead(L_S) == 0)) {
+//      RIGHT_1_CUSTOM();
+//    }
+//  //}
+//  // Turn right until both sensors detect white
+////  while (!(digitalRead(R_S) == 0 && digitalRead(L_S) == 0)) {
+////    RIGHT_1_CUSTOM();
+////  }
+//  STOP(); // Stop as soon as white is detected on both sensors
+//  delay(100);
+}
+
 void distanceComparison_obstacle() { // NOT DONE ×
   if (ultraDistance_L > ultraDistance_R) {
     // Go left
     //RIGHT_CUSTOMPWM_2(); // Relative to car dir.
-    LEFT_1_CUSTOM();
-    delay(2000);
+    while (ultrasonic_obstacle_sensing() < 50) {
+      LEFT_1_CUSTOM();
+      // delay(10);
+    }
+    // LEFT_1_CUSTOM();
+    delay(1000); // Account for width of car
     BACK(); // Back is actually forwards in our case
-    delay(500);
-    while (digitalRead(R_S) == 0) {
+    delay(1000);
+    while (digitalRead(R_S) != 1) {
       RIGHT_1_CUSTOM();
       delay(50);
+      // STOP();
+      // delay(100);
+    }
+    STOP();
+    delay(1500);
+    while ((digitalRead(R_S) != 0 && digitalRead(L_S) != 0)) {
+      LEFT_1_CUSTOM(); // Compensate for centre
+      //delay(100);
     }
     STOP();
     delay(1000);
   } else {
     //LEFT_CUSTOMPWM_2();
-    RIGHT_1_CUSTOM();
-    delay(2000);
-    BACK();
-    delay(500);
-    while (digitalRead(L_S) == 0) {
-      LEFT_1_CUSTOM();
-      delay(50);
+    while (ultrasonic_obstacle_sensing() < 50) {
+      RIGHT_1_CUSTOM();
+      // delay(10);
     }
+    delay(1500); // Account for width of car
+    // delay(2000);
+    BACK();
+    delay(1000);
+    recenterBot();
+//    while (digitalRead(R_S) != 1) {
+//      LEFT_1_CUSTOM();
+//      delay(50);
+//      STOP();
+//      // delay(100);
+//    }
+//    STOP();
+//    delay(5000);
+//    //if (digitalRead(R_S) == 1) { // Compensate for centre
+//    while ((digitalRead(R_S) != 0 && digitalRead(L_S) != 0)) {
+//      RIGHT_1_CUSTOM(); // Compensate for centre
+//      //delay(100);
+//    }
     STOP();
     delay(1000);
   }
@@ -645,21 +716,25 @@ void lineFollower_obstacle_avoidance() {
       BACK(); // Advance
       delay(100);
       STOP();
+    } else if ((digitalRead(R_S) == 1) || (digitalRead(L_S) == 1)) {
+      if (ultraDistance_F < PresetDistance) {
+        CheckSides(); // Either sensor reads black and ultrasonic distance is less than preset, call CheckSides()
+      }
     } else {
       CheckSides();// CheckSides(); // Obstcale detected, finding alternative path
     }
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 0)) { 
     // If Right Sensor is Black and Left Sensor is White then it will call Right function
     BEAR_RIGHT_CUSTOM();
-    delay(150);
-    STOP();
+    delay(100);
+    //STOP();
   } else if ((digitalRead(R_S) == 0) && (digitalRead(L_S) == 1)) {
     // STOP();
     // delay(50);
     // RIGHT_1(); // If Right Sensor is White and Left Sensor is Black then it will call Left function  
     BEAR_LEFT_CUSTOM();
-    delay(150);
-    STOP();
+    delay(100);
+    //STOP();
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
     delay(5000);
@@ -667,20 +742,6 @@ void lineFollower_obstacle_avoidance() {
 
   delay(10);
 }
-
-//void JetsonCommunication() { // DONE ✔
-//  if (SERIAL.available() > 0) {
-//    // Read the incoming byte
-//    char command = Serial.read();
-//
-//    // Check if the received command is "Detected"
-//    if (command) {
-//      // Serial.println("Object Detected!"); // Do something...
-//      Serial.println(command); // Handshake protocol
-//      displayText("OBJECT DECTECTED", String(command), 0, 0, 0, 10);
-//    }
-//  }
-//}
 
 void JetsonCommunication() {
   Serial.setTimeout(50);
@@ -734,7 +795,6 @@ void setup() {
 
   // Setup Servo 
   pinMode(servoPin, OUTPUT);
-
   servo_pulse(servoPin, 0); // Set to zero angle
   // Re-align Servo
   for (int angle = 70; angle <= 140; angle += 5) {
@@ -753,26 +813,34 @@ void setup() {
   // Setup Voltage detector
   pinMode(A0, INPUT);
 
-  displayText("TESTING", "10 Seconds...", 0, 0, 0, 10);
-  delay(10000); // Delay 10 seconds
+  displayText("TESTING", "5 Seconds...", 0, 0, 0, 10);
+  delay(5000); // Delay 10 seconds
   display.clearDisplay();
   delay(500);
+}
+
+void testCar() {
+  LEFT_1_CUSTOM();
+  delay(3000);
+  STOP();
 }
 
 void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
-    voltCount++; // Voltage r    while(true) {
+    voltCount++; // Voltage reading    while(true) {
     time = millis();
-    //IRTest();
-    // UART_Control(); //get USB and BT serial data -- For servo camera control
-    // interface_control(); // Manual control 
 
-    while (true) { // Run algorith continuously for testing
-      JetsonCommunication(); 
-      // lineFollower_obstacle_avoidance();
+    while (true) { // Run algorithm continuously for testing
+      //SERIAL.println("print");
+//      if (Serial3.available()) {
+//        //displayText("BT Success", "", 0, 0, 0, 10);
+//        Serial3.write("hi");
+//      }
+      // JetsonCommunication(); 
+      lineFollower_obstacle_avoidance();
     }
-    
+   
     // Constrain the servo movement
     pan = constrain(pan, servo_min, servo_max);
     tilt = constrain(tilt, servo_min, servo_max);
