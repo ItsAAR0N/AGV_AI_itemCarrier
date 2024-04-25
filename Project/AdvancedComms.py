@@ -20,7 +20,7 @@ try:
 except serial.SerialException as e:
     print('FAILED TO CONNECT TO ARDUINO {0}'.format(e))
 
-while serial.Serial.available():
+while True:
     try:
         command = input("Enter command (A/B/C): ").strip().upper()
         arduino.write((command + "|").encode())

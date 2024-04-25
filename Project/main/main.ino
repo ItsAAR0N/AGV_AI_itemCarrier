@@ -256,8 +256,8 @@ void LEFT_CUSTOMPWM_2()
 void LEFT_1_CUSTOM()
 {
   MOTORA_STOP(Motor_PWM); 
-  MOTORB_FORWARD(Motor_PWM+27); // 37
-  MOTORC_BACKOFF(Motor_PWM+24); // 22
+  MOTORB_FORWARD(Motor_PWM+25); // 37
+  MOTORC_BACKOFF(Motor_PWM+22); // 22
   MOTORD_STOP(Motor_PWM);
 }
 
@@ -579,7 +579,7 @@ void recenterBot() {
     LEFT_1_CUSTOM();
     delay(50);
     STOP();
-    delay(100);
+    //delay(50); ///////////////////////////////////////////
   }
   STOP();
   delay(2000);
@@ -624,7 +624,7 @@ void distanceComparison_obstacle() { // NOT DONE ×
     //RIGHT_CUSTOMPWM_2(); // Relative to car dir.
     while (ultrasonic_obstacle_sensing() < 50) {
       LEFT_1_CUSTOM();
-      // delay(10);
+      delay(50); //////////////////////////////////////////////////////
     }
     // LEFT_1_CUSTOM();
     delay(1000); // Account for width of car
@@ -632,7 +632,7 @@ void distanceComparison_obstacle() { // NOT DONE ×
     delay(1000);
     while (digitalRead(R_S) != 1) {
       RIGHT_1_CUSTOM();
-      delay(50);
+      delay(50); //////////////////////////////////////////////
       // STOP();
       // delay(100);
     }
@@ -675,7 +675,9 @@ void distanceComparison_obstacle() { // NOT DONE ×
 
 void CheckSides() { 
   STOP(); 
-  delay(100);
+  delay(10000);
+  JetsonCommunication();
+  delay(15000);
   for (int angle = 70; angle <= 140; angle += 5) { // Rotate right
     servo_pulse(servoPin, angle); // Check right obstacles
   }
@@ -738,6 +740,13 @@ void lineFollower_obstacle_avoidance() {
   } else if ((digitalRead(R_S) == 1) && (digitalRead(L_S) == 1)) { 
     STOP(); // Destination reached
     delay(5000);
+    turn180degrees();
+    STOP();
+    delay(500);
+    while (true) {
+      Serial3.write('1'); // call grab function
+      displayText("Command sent...", "PARKED", 0, 0, 0, 10);
+    }
   }
 
   delay(10);
@@ -763,7 +772,7 @@ void setup() {
   SERIAL.begin(115200); // USB Serial setup
   // SERIAL.println("ROBOT START");
   STOP(); // Stop the robot
-  Serial3.begin(9600); // BT serial setup
+  Serial3.begin(38400); // BT serial setup
 
   // Setup Servo motors
   // Pan=PL4=>48, Tilt=PL5=>47
@@ -825,18 +834,28 @@ void testCar() {
   STOP();
 }
 
+void turn180degrees() {
+  rotate_1();
+  delay(3000);
+  STOP();
+  delay(5000);
+}
+
 void loop() {
   // Run the code every 5 ms
   if (millis() > (time + 5)) {
     voltCount++; // Voltage reading    while(true) {
     time = millis();
 
+
+  
     while (true) { // Run algorithm continuously for testing
       //SERIAL.println("print");
 //      if (Serial3.available()) {
 //        //displayText("BT Success", "", 0, 0, 0, 10);
 //        Serial3.write("hi");
 //      }
+      //turn180degrees();
       // JetsonCommunication(); 
       lineFollower_obstacle_avoidance();
     }
